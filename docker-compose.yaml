@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+       context: .
+       dockerfile: ./docker/php/Dockerfile
+    container_name: innoscripta-app
+    volumes:
+      - ./src:/var/www/html
+    working_dir: /var/www/html
+    networks:
+      - innoscripta-network
+    ports:
+      - "9000:9000"
+
+  nginx:
+    image: nginx:alpine
+    container_name: innoscripta-nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - innoscripta-network
+
+  redis:
+    image: redis:alpine
+    container_name: innoscripta-redis
+    networks:
+      - innoscripta-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: innoscripta-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: innoscripta
+      MYSQL_USER: innoscripta_user
+      MYSQL_PASSWORD: innoscripta_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - innoscripta-network
+
+volumes:
+  mysql_data:
+
+networks:
+  innoscripta-network:
+   name: laravel-innoscripta
+   driver: bridge

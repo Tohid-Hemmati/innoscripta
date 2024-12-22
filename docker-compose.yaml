@@ -48,8 +48,24 @@ services:
     networks:
       - innoscripta-network
 
+  mysql_test:
+    image: mysql:8.0
+    container_name: innoscripta-mysql-test
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: innoscripta_test
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+    networks:
+      - innoscripta-network
+
 volumes:
   mysql_data:
+  mysql_test_data:
 
 networks:
   innoscripta-network:

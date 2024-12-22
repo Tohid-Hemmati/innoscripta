@@ -17,7 +17,7 @@ class ArticleController extends Controller
      */
     public function index(ArticleRequest $request)
     {
-        $articles = $this->articleService->index($request);
+        $articles = $this->articleService->fetchArticles($request);
 
         return response()->json($articles);
     }

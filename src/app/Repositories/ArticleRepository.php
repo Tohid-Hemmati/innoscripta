@@ -7,7 +7,7 @@ use App\Models\Article;
 
 class ArticleRepository implements ArticleRepositoryInterface
 {
-    public function index($request)
+    public function fetchArticles($request)
     {
         return Article::all();
     }

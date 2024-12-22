@@ -4,5 +4,5 @@ namespace App\Contracts;
 
 interface ArticleRepositoryInterface
 {
-    public function index($request);
+    public function fetchArticles($request);
 }

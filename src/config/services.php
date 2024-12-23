@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\NewsServiceEnum;
+
 return [
 
     /*
@@ -35,4 +37,18 @@ return [
         ],
     ],
 
+    'news' => [
+        'default_source' => NewsServiceEnum::NEWS_API->value,
+        'sources' => [
+            NewsServiceEnum::NEWS_API->value => [
+                'key' => env('NEWSAPI_KEY'),
+            ],
+            NewsServiceEnum::NEW_YORK_TIMES->value => [
+                'key' => env('NYTIME_KEY'),
+            ],
+            NewsServiceEnum::GUARDIAN->value => [
+                'key' => env('GUARDIAN_KEY'),
+            ],
+        ],
+    ],
 ];

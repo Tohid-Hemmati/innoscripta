@@ -19,4 +19,18 @@ class ArticleService implements ArticleServiceInterface
     {
         return $this->articleRepository->getArticle($id);
     }
+
+    public function getPreferredNews($userID)
+    {
+        return $this->articleRepository->getPreferredNews($userID);
+    }
+    public function setPreferredNews($request, $userID)
+    {
+        return $this->articleRepository->setPreferredNews($request, $userID);
+    }
+
+    public function fetchNewsFeed($request, $userID)
+    {
+        return $this->articleRepository->fetchNewsFeed($request, $userID);
+    }
 }

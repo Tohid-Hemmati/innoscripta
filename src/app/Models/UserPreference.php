@@ -16,4 +16,9 @@ class UserPreference extends Model
         'preferred_categories' => 'array',
         'preferred_authors' => 'array',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

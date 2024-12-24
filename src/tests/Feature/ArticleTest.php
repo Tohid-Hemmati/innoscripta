@@ -6,7 +6,6 @@ use App\Models\Article;
 use App\Models\User;
 use App\Models\UserPreference;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class ArticleTest extends TestCase
@@ -20,7 +19,6 @@ class ArticleTest extends TestCase
     }
     public function test_can_fetch_paginated_articles_with_authentication()
     {
-        Log::info('Current DB Connection:', ['db' => config('database.default')]);
         $user = User::factory()->create();
         $this->actingAs($user, 'sanctum');
 

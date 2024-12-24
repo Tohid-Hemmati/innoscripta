@@ -13,10 +13,12 @@ Route::get('/user', function (Request $request) {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('/articles', [ArticleController::class, 'index']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
-
 Route::get('/reset-password/{token}', function ($token) {
     return view('auth.reset-password', ['token' => $token]);
 })->middleware('guest')->name('password.reset');
+
+Route::get('/articles', [ArticleController::class, 'getArticles'])->middleware('auth:sanctum');
+Route::get('/article/{id}', [ArticleController::class, 'getArticle'])->middleware('auth:sanctum');
+

@@ -15,9 +15,16 @@ class ArticleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(ArticleRequest $request)
+    public function getArticles(ArticleRequest $request)
     {
-        $articles = $this->articleService->fetchArticles($request);
+        $articles = $this->articleService->getArticles($request);
+
+        return response()->json($articles);
+    }
+
+    public function getArticle($id)
+    {
+        $articles = $this->articleService->getArticle($id);
 
         return response()->json($articles);
     }

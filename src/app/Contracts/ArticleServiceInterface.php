@@ -4,5 +4,6 @@ namespace App\Contracts;
 
 interface ArticleServiceInterface
 {
-    public function fetchArticles($request);
+    public function getArticles($request);
+    public function getArticle($id);
 }

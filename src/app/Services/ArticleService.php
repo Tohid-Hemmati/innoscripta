@@ -10,8 +10,13 @@ class ArticleService implements ArticleServiceInterface
 
     public function __construct(protected ArticleRepositoryInterface $articleRepository){}
 
-    public function fetchArticles($request)
+    public function getArticles($request)
     {
-        return $this->articleRepository->fetchArticles($request);
+        return $this->articleRepository->getArticles($request);
+    }
+
+    public function getArticle($id)
+    {
+        return $this->articleRepository->getArticle($id);
     }
 }

@@ -2,57 +2,62 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Contracts\Debug\ExceptionHandler;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
-class Handler implements ExceptionHandler
+class Handler extends ExceptionHandler
 {
-    public function report(Throwable $e)
+    /**
+     * Report or log an exception.
+     *
+     * @param  \Throwable  $exception
+     * @return void
+     * @throws \Exception
+     */
+    public function report(Throwable $exception)
     {
-        if ($this->shouldReport($e)) {
-            Log::error($e->getMessage(), [
-                'exception' => $e,
-            ]);
-        }
+        parent::report($exception);
     }
 
-    public function render($request, Throwable $e)
+    /**
+     * Render an exception into an HTTP response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Throwable  $exception
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @throws \Throwable
+     */
+    public function render($request, Throwable $exception)
     {
-        $status = $this->getHttpStatus($e);
-
-        if (config('app.debug')) {
+        if ($exception instanceof ValidationException) {
             return response()->json([
-                'message' => $e->getMessage(),
-                'trace' => $e->getTrace(),
-            ], $status);
+                'message' => 'The given data was invalid.',
+                'errors' => $exception->errors(),
+            ], 422);
         }
 
-        return response()->json([
-            'message' => 'An error occurred. Please try again later.',
-        ], $status);
-    }
-
-    public function renderForConsole($output, Throwable $e)
-    {
-        $output->writeln('<error>' . $e->getMessage() . '</error>');
-        if (config('app.debug')) {
-            $output->writeln($e->getTraceAsString());
-        }
-    }
-
-    public function shouldReport(Throwable $e)
-    {
-        if ($e instanceof ValidationException) {
-            return false;
+        if ($exception instanceof AuthenticationException) {
+            return $this->unauthenticated($request, $exception);
         }
 
-        return true;
+        return parent::render($request, $exception);
     }
 
-    protected function getHttpStatus(Throwable $e): int
+    /**
+     * Handle unauthenticated exceptions.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Illuminate\Auth\AuthenticationException  $exception
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    protected function unauthenticated($request, AuthenticationException $exception)
     {
-        return method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        return redirect()->guest(route('login'));
     }
 }

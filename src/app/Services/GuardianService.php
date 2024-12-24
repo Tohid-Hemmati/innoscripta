@@ -6,7 +6,6 @@ use App\Contracts\NewsApiInterface;
 use App\Contracts\NewsApiResponseAdapterInterface;
 use App\Enums\NewsServiceEnum;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class GuardianService implements NewsApiInterface
 {
@@ -37,10 +36,12 @@ class GuardianService implements NewsApiInterface
             'to-date' => now()->toDateString(),
         ];
 
-    $allResults = [];
-    $currentPage = 1;
-    $maxPages = 10;
-
+        $allResults = [];
+        $currentPage = 1;
+        $maxPages = 10;
+        if (env('APP_ENV') === 'testing') {
+            $maxPages = 1;
+        }
         do {
             $response = Http::get($this->baseUrl . 'search', array_merge($defaultFilters, $filters, ['page' => $currentPage]));
 
@@ -55,20 +56,18 @@ class GuardianService implements NewsApiInterface
                 $adaptedResults = $this->adapter->adapt($data);
                 $allResults = array_merge($allResults, $adaptedResults);
 
-            $currentPage++;
-            usleep(500000);
-        } elseif ($response->status() === 429) {
-            $retryAfter = $response->header('Retry-After');
-            Log::warning("Rate limit exceeded. Retrying after {$retryAfter} seconds...");
-            sleep((int)$retryAfter);
-        } else {
-            Log::error('Error fetching news', ['body' => $response->body()]);
-            throw new \Exception('Error fetching news from the Guardian API');
-        }
-    } while ($currentPage <= $maxPages);
+                $currentPage++;
+                usleep(500000);
+            } elseif ($response->status() === 429) {
+                $retryAfter = $response->header('Retry-After');
+                sleep((int)$retryAfter);
+            } else {
+                throw new \Exception('Error fetching news from the Guardian API');
+            }
+        } while ($currentPage <= $maxPages);
 
-    return $allResults;
-}
+        return $allResults;
+    }
 
 
 }

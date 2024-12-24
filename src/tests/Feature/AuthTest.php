@@ -100,13 +100,12 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create();
         $token = Password::createToken($user);
-
         $response = $this->postJson('/api/reset-password', [
             'email' => $user->email,
             'token' => $token,
             'password' => 'newpassword',
+            'password_confirmation' => 'wrongconfirmation',
         ]);
-
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['password']);
     }

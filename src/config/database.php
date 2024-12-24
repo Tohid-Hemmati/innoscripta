@@ -61,6 +61,25 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
+        'mysql_testing' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL',),
+            'host' => env('DB_TEST_HOST', env('DB_HOST', '127.0.0.1')), // Use DB_TEST_HOST if defined
+            'port' => env('DB_TEST_PORT', env('DB_PORT', '3306')), // Use DB_TEST_PORT if defined
+            'database' => env('DB_TEST_DATABASE', env('DB_DATABASE', 'innoscripta_test')), // Use DB_TEST_DATABASE if defined
+            'username' => env('DB_TEST_USERNAME', env('DB_USERNAME', 'test_user')), // Use DB_TEST_USERNAME if defined
+            'password' => env('DB_TEST_PASSWORD', env('DB_PASSWORD', 'test_password')), // Use DB_TEST_PASSWORD if defined
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
 
         'mariadb' => [
             'driver' => 'mariadb',

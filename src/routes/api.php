@@ -21,4 +21,7 @@ Route::get('/reset-password/{token}', function ($token) {
 
 Route::get('/articles', [ArticleController::class, 'getArticles'])->middleware('auth:sanctum');
 Route::get('/article/{id}', [ArticleController::class, 'getArticle'])->middleware('auth:sanctum');
+Route::post('/preferences', [ArticleController::class, 'setPreferredNews'])->middleware('auth:sanctum');
+Route::get('/preferences', [ArticleController::class, 'getPreferredNews'])->middleware('auth:sanctum');
+Route::get('/news-feed', [ArticleController::class, 'fetchNewsFeed'])->middleware('auth:sanctum');
 

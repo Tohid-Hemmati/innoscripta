@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Contracts\ArticleServiceInterface;
 use App\Http\Requests\ArticleRequest;
+use App\Http\Requests\UserPreferenceRequest;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ArticleController extends Controller
 {
@@ -44,6 +48,27 @@ class ArticleController extends Controller
                 'published_at' => $article->published_at,
             ],
         ]);
+    }
+
+    public function getPreferredNews()
+    {
+        $preference = $this->articleService->getPreferredNews(Auth::id());
+        if (!$preference) {
+            return response()->json(['message' => 'Preferences not found'], 404);
+        }
+        return response()->json($preference, 200);
+    }
+    public function setPreferredNews(UserPreferenceRequest $request): JsonResponse
+    {
+        $preference = $this->articleService->setPreferredNews($request, Auth::id());
+        return response()->json(['message' => 'Preferences saved successfully', 'data' => $preference], 200);
+    }
+    public function fetchNewsFeed(Request $request)
+    {
+        $newsFeed = $this->articleService->fetchNewsFeed($request, Auth::id());
+        return $newsFeed
+            ? response()->json(['data' => $newsFeed])
+            : response()->json(['message' => 'Preferences not found'], 404);
     }
 
 }

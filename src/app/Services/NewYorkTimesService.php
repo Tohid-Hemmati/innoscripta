@@ -25,18 +25,49 @@ class NewYorkTimesService implements NewsApiInterface
      * @return array
      * @throws \Exception
      */
+    /**
+     * Fetch news from the New York Times API.
+     *
+     * @param array $filters
+     * @return array
+     * @throws \Exception
+     */
     public function fetchNews(array $filters = []): array
     {
-        $query = array_merge($filters, [
-            'api-key' => $this->apiKey,
-        ]);
+        $allowedFilters = [
+            'q',
+            'fq',
+            'begin_date',
+            'end_date',
+            'sort',
+            'page',
+        ];
 
-        $response = Http::get($this->baseUrl . 'articlesearch.json', $query);
+        $query = array_merge(
+            array_filter($filters, fn($key) => in_array($key, $allowedFilters), ARRAY_FILTER_USE_KEY),
+            ['api-key' => $this->apiKey]
+        );
 
-        if ($response->successful()) {
-            return $this->adapter->adapt($response->json());
+        $articles = [];
+        $maxPages = 100;
+
+        for ($page = 0; $page < $maxPages; $page++) {
+            $query['page'] = $page;
+            $response = Http::get($this->baseUrl . 'articlesearch.json', $query);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $articles = array_merge($articles, $this->adapter->adapt($data));
+
+                if (count($data['response']['docs']) < 10) {
+                    break;
+                }
+            } else {
+                throw new \Exception('Error fetching news from the New York Times API');
+            }
         }
 
-        throw new \Exception('Error fetching news from the New York Times API');
+        return $articles;
     }
+
 }

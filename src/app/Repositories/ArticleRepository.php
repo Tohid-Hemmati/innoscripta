@@ -14,8 +14,18 @@ class ArticleRepository implements ArticleRepositoryInterface
 
         $articles = Article::paginate($perPage);
 
-        return response()->json([
-            'data' => $articles->items(),
+        return [
+            'data' => collect($articles->items())->map(function ($article) {
+                return [
+                    'id' => $article->id,
+                    'title' => $article->title,
+                    'content' => $article->content,
+                    'source' => $article->source,
+                    'source_url' => $article->source_url,
+                    'author' => $article->author,
+                    'published_at' => $article->published_at,
+                ];
+            }),
             'meta' => [
                 'current_page' => $articles->currentPage(),
                 'total_pages' => $articles->lastPage(),
@@ -27,27 +37,18 @@ class ArticleRepository implements ArticleRepositoryInterface
                 'last' => $articles->url($articles->lastPage()),
                 'prev' => $articles->previousPageUrl(),
                 'next' => $articles->nextPageUrl(),
-            ],
-        ]);
+            ]
+        ];
     }
+
 
     /**
      * @param $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return array[]
      */
     public function getArticle($id)
     {
-        $article = Article::find($id);
-
-        if (!$article) {
-            return response()->json([
-                'error' => 'Article not found',
-            ], 404);
-        }
-
-        return response()->json([
-            'data' => $article,
-        ]);
+        return Article::find($id);
     }
 
     public function createArticle($data)

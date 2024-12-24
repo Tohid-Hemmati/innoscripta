@@ -16,11 +16,11 @@ class ArticleFactory extends Factory
             'source' => $this->faker->randomElement(['NewsAPI', 'The Guardian', 'NYTimes']),
             'source_url' => $this->faker->url,
             'author' => $this->faker->name,
-            'published_at' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'metadata' => json_encode([
                 'tags' => $this->faker->words(3),
                 'categories' => $this->faker->words(2),
             ]),
+            'published_at' => $this->faker->dateTimeBetween('-1 year', 'now')->format('Y-m-d H:i:s'),
         ];
     }
 }

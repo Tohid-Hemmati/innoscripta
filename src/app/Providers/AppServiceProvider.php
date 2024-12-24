@@ -15,7 +15,9 @@ use App\Repositories\ArticleRepository;
 use App\Repositories\UserRepository;
 use App\Services\ArticleService;
 use App\Services\UserService;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\ServiceProvider;
+use App\Exceptions\Handler;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(ExceptionHandler::class, Handler::class);
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(UserServiceInterface::class, UserService::class);
         $this->app->bind(ArticleRepositoryInterface::class, ArticleRepository::class);

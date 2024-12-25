@@ -15,7 +15,10 @@ use App\Repositories\ArticleRepository;
 use App\Repositories\UserRepository;
 use App\Services\ArticleService;
 use App\Services\UserService;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use App\Exceptions\Handler;
 
@@ -52,6 +55,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        RateLimiter::for('allowedRequestNumber', function (Request $request) {
+            return Limit::perMinute(20)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }

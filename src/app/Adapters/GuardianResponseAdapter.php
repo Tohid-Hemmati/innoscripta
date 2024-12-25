@@ -13,7 +13,7 @@ class GuardianResponseAdapter implements NewsApiResponseAdapterInterface
     {
         return collect($response['response']['results'] ?? [])->map(fn($item) => new NewsDTO(
             title: $item['webTitle'],
-            content: substr(Purifier::clean($item['fields']['body'] ?? ''), 0, 500) ?? null,
+            content: substr(Purifier::clean(htmlspecialchars($item['fields']['body'] ?? '') ?? ''), 0, 500) ?? null,
             source: 'Guardian',
             source_url: $item['webUrl'] ?? null,
             author: $item['author'] ?? null,

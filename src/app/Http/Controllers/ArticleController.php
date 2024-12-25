@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\ArticleServiceInterface;
-use App\Http\Requests\ArticleRequest;
 use App\Http\Requests\UserPreferenceRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,7 +18,7 @@ class ArticleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function getArticles(ArticleRequest $request)
+    public function getArticles(Request $request)
     {
         $articles = $this->articleService->getArticles($request);
 

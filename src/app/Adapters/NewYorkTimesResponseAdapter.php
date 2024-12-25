@@ -13,7 +13,7 @@ class NewYorkTimesResponseAdapter implements NewsApiResponseAdapterInterface
     {
         return collect($response['response']['docs'] ?? [])->map(fn($item) => new NewsDTO(
             title: $item['headline']['main'] ?? '',
-            content: substr(Purifier::clean($item['abstract'] ?? ''), 0, 500) ?? null, // the content could be extracted using the DOM parser but this is a simple example
+            content: substr(Purifier::clean(htmlspecialchars($item['abstract'] ?? '') ?? ''), 0, 500) ?? null, // the content could be extracted using the DOM parser but this is a simple example
             source: $item['source'] ?? null,
             source_url: $item['web_url'] ?? null,
             author: $item['byline']['original'] ?? null,

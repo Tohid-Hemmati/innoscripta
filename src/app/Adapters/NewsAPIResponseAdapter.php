@@ -14,7 +14,7 @@ class NewsAPIResponseAdapter implements NewsApiResponseAdapterInterface
         return collect($response['articles'] ?? [])->map(function ($item) {
             return new NewsDTO(
                 title: $item['title'] ?? 'No Title',
-                content: substr(Purifier::clean($item['content'] ?? ''), 0, 500) ?? null,
+                content: substr(Purifier::clean(htmlspecialchars($item['content'] ?? '') ?? ''), 0, 500) ?? null,
                 source: 'NewsAPI',
                 source_url: $item['url'] ?? '',
                 author: $item['author'] ?? null,

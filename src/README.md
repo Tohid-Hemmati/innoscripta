@@ -1,66 +1,107 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Innoscripta News App
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This project is a Laravel-based application for managing user authentication, preferences, and a dynamic news feed. The application is designed to fetch, manage, and serve customized news content to users based on their preferences. It uses Docker for containerized deployment and includes a MySQL database, Redis cache, PHP backend, and Nginx server.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Table of Contents
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. [Features](#features)
+2. [Technologies Used](#technologies-used)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [Docker Setup](#docker-setup)
+6. [Project Structure](#project-structure)
+7. [API Endpoints](#api-endpoints)
+8. [Database Migrations](#database-migrations)
+9. [Seeding Data](#seeding-data)
+10. [License](#license)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Features
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- User registration and login using Laravel Sanctum.
+- Token-based authentication.
+- Customizable user preferences for news sources, categories, and authors.
+- Dynamic news feed retrieval based on user preferences.
+- Full-text search for articles.
+- Background job scheduling and database migrations.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Technologies Used
 
-## Laravel Sponsors
+- **Backend:** Laravel 11
+- **Database:** MySQL 8.0
+- **Cache:** Redis
+- **Containerization:** Docker, Docker Compose
+- **Web Server:** Nginx
+- **Language:** PHP 8.2
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## Installation
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/Tohid-Hemmati/innoscripta.git
+    cd innoscripta-news-app
+    ```
 
-## Contributing
+2. Set up environment variables:
+    ```bash
+    cp .env.example .env
+    ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3. Configure `.env` file for database, Redis, and Laravel settings.
 
-## Code of Conduct
+4. Install dependencies:
+    ```bash
+    composer install
+    ```
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Docker Setup
 
-## Security Vulnerabilities
+1. Build and start Docker containers:
+    ```bash
+    docker-compose up --build
+    ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+2. Verify containers are running:
+    ```bash
+    docker ps
+    ```
 
-## License
+3. Access the app at [http://localhost:8000](http://localhost:8000).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## Project Structure
+
+- `docker/`: Docker configurations for PHP, Nginx, and MySQL.
+- `src/`: Laravel application source code.
+- `docker/php/Dockerfile`: PHP application container definition.
+- `docker/nginx/default.conf`: Nginx configuration.
+- `database/migrations/`: Database migrations.
+- `database/seeders/`: Data seeders for testing and default data.
+
+---
+
+## API Endpoints
+
+### Authentication
+
+- **Register:** `POST /api/register`
+- **Login:** `POST /api/login`
+- **Logout:** `POST /api/logout`
+- **Forgot Password:** `POST /api/password/forgot`
+- **Reset Password:** `POST /api/password/reset`
+
+### Articles
+
+- **Fetch All Articles:** `GET /api/articles`
+- **Fetch Article by ID:** `GET /api/articles/{id}`
+- **Fetch Preferred News:** `GET /api/articles/preferred`
+- **Set Preferences:** `POST /api/articles/preferences`

@@ -84,7 +84,15 @@ class ArticleRepository implements ArticleRepositoryInterface
      */
     public function setPreferredNews($request, $userID)
     {
-        Cache::forget($userID . 'UserPreference');
+        $keyListKey = $userID . '_UserPreference_Keys';
+
+        $cachedKeys = Cache::get($keyListKey, []);
+        foreach ($cachedKeys as $key) {
+            Cache::forget($key);
+        }
+
+        Cache::forget($keyListKey);
+
         return UserPreference::updateOrCreate(
             ['user_id' => $userID],
             [
@@ -98,19 +106,36 @@ class ArticleRepository implements ArticleRepositoryInterface
     public function fetchNewsFeed($request, $userID)
     {
         $preference = $this->getPreferredNews($userID);
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', 10);
+        $cacheKey = $userID . 'UserPreference_Page_' . $page . '_PerPage_' . $perPage;
 
-        return Cache::rememberForever($userID . 'UserPreference', function () use ($preference) {
-            return Article::query()
-                ->when(!empty($preference['preferred_sources']), function ($query) use ($preference) {
-                    $query->whereJsonContains('preferred_sources', $preference['preferred_sources']);
-                })
-                ->when(!empty($preference['preferred_categories']), function ($query) use ($preference) {
-                    $query->whereJsonContains('preferred_categories', $preference['preferred_categories']);
-                })
-                ->when(!empty($preference['preferred_authors']), function ($query) use ($preference) {
-                    $query->whereJsonContains('preferred_authors', $preference['preferred_authors']);
-                })
-                ->get();
+        $keyListKey = $userID . '_UserPreference_Keys';
+
+        return Cache::remember($cacheKey, now()->addHours(6), function () use ($preference, $perPage, $keyListKey, $cacheKey) {
+            $cachedKeys = Cache::get($keyListKey, []);
+            if (!in_array($cacheKey, $cachedKeys)) {
+                $cachedKeys[] = $cacheKey;
+                Cache::put($keyListKey, $cachedKeys, now()->addHours(6));
+            }
+
+            $query = Article::query();
+
+            if (!empty($preference['preferred_sources'])) {
+                $query->whereJsonContains('preferred_sources', $preference['preferred_sources']);
+            }
+
+            if (!empty($preference['preferred_categories'])) {
+                $query->whereJsonContains('preferred_categories', $preference['preferred_categories']);
+            }
+
+            if (!empty($preference['preferred_authors'])) {
+                $query->whereJsonContains('preferred_authors', $preference['preferred_authors']);
+            }
+
+            return $query->select(['id', 'title', 'author', 'category'])
+                ->paginate($perPage);
         });
     }
+
 }

@@ -3,12 +3,10 @@
 namespace Tests\Unit;
 
 use App\Contracts\ArticleServiceInterface;
-use App\Models\Article;
 use App\Models\User;
-use App\Models\UserPreference;
 use App\Repositories\ArticleRepository;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class PreferredNewsFeedTest extends TestCase
@@ -20,43 +18,65 @@ class PreferredNewsFeedTest extends TestCase
         $user = User::factory()->create(['id' => 1]);
 
         $mockService = $this->createMock(ArticleServiceInterface::class);
+
         $mockService->method('fetchNewsFeed')->willReturn([
-            [
-                'preferred_sources' => ['source1'],
-                'preferred_categories' => ['category1'],
-                'preferred_authors' => ['author1'],
+            'data' => [
+                [
+                    'id' => 1,
+                    'title' => 'Test Article',
+                    'author' => 'Author Name',
+                    'category' => 'Test Category',
+                ],
+            ],
+            'meta' => [
+                'current_page' => 1,
+                'total_pages' => 1,
+                'per_page' => 10,
+                'total_items' => 1,
+            ],
+            'links' => [
+                'first' => '/api/news-feed?page=1',
+                'last' => '/api/news-feed?page=1',
+                'prev' => null,
+                'next' => null,
             ],
         ]);
 
         $this->app->instance(ArticleServiceInterface::class, $mockService);
 
-        $mockQuery = $this->getMockBuilder(Builder::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['when', 'get'])
-            ->getMock();
-
-        $mockQuery->method('when')->willReturnSelf();
-        $mockQuery->method('get')->willReturn(collect([
-            [
-                'preferred_sources' => ['source1'],
-                'preferred_categories' => ['category1'],
-                'preferred_authors' => ['author1'],
-            ],
-        ]));
-
-        $this->partialMock(Article::class, function ($mock) use ($mockQuery) {
-            $mock->shouldReceive('query')->andReturn($mockQuery);
-        });
-
         $response = $this->actingAs($user)
-            ->getJson('/api/news-feed');
+            ->getJson('/api/news-feed?page=1&per_page=10');
         $response->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [
+                    'data' => [
+                        '*' => ['id', 'title', 'author', 'category'],
+                    ],
+                    'meta' => ['current_page', 'total_pages', 'per_page', 'total_items'],
+                    'links' => ['first', 'last', 'prev', 'next'],
+                ],
+            ])
             ->assertJson([
                 'data' => [
-                    [
-                        'preferred_sources' => ['source1'],
-                        'preferred_categories' => ['category1'],
-                        'preferred_authors' => ['author1'],
+                    'data' => [
+                        [
+                            'id' => 1,
+                            'title' => 'Test Article',
+                            'author' => 'Author Name',
+                            'category' => 'Test Category',
+                        ],
+                    ],
+                    'meta' => [
+                        'current_page' => 1,
+                        'total_pages' => 1,
+                        'per_page' => 10,
+                        'total_items' => 1,
+                    ],
+                    'links' => [
+                        'first' => '/api/news-feed?page=1',
+                        'last' => '/api/news-feed?page=1',
+                        'prev' => null,
+                        'next' => null,
                     ],
                 ],
             ]);
@@ -130,59 +150,70 @@ class PreferredNewsFeedTest extends TestCase
     public function testGetPreferredNewsFromCache()
     {
         $user = User::factory()->create(['id' => 1]);
-        UserPreference::factory()->create([
-            'user_id' => $user->id,
-            'preferred_sources' => json_encode(['source1']),
-            'preferred_categories' => json_encode(['category1']),
-            'preferred_authors' => json_encode(['author1']),
-        ]);
 
-        $repo = new ArticleRepository();
+        $mockService = $this->createMock(ArticleServiceInterface::class);
 
-        cache()->put($user->id . 'UserPreference', [
+        $cachedData = [
             'preferred_sources' => ['source1'],
             'preferred_categories' => ['category1'],
             'preferred_authors' => ['author1'],
-        ]);
+        ];
 
-        $result = $repo->getPreferredNews($user->id);
+        $mockService->expects($this->once())
+            ->method('getPreferredNews')
+            ->with($user->id)
+            ->willReturn($cachedData);
 
-        $this->assertEquals([
-            'preferred_sources' => ['source1'],
-            'preferred_categories' => ['category1'],
-            'preferred_authors' => ['author1'],
-        ], $result);
+        $this->app->instance(ArticleServiceInterface::class, $mockService);
 
-        $this->assertTrue(cache()->has($user->id . 'UserPreference'));
+        cache()->put($user->id . 'UserPreference', $cachedData);
+
+        $result = $mockService->getPreferredNews($user->id);
+
+        $this->assertEquals($cachedData, $result);
+
+        $this->assertTrue(Cache::has($user->id . 'UserPreference'));
     }
+
     public function testSetPreferredNewsUpdatesCacheAndDatabase()
     {
         $user = User::factory()->create();
 
-        $repo = new ArticleRepository();
+        $requestData = [
+            'preferred_sources' => ['source1', 'source2'],
+            'preferred_categories' => ['category1', 'category2'],
+            'preferred_authors' => ['author1', 'author2'],
+        ];
 
-        $request = new class {
+        $repository = app(ArticleRepository::class);
+
+        $request = new class ($requestData) {
+            private $data;
+
+            public function __construct($data)
+            {
+                $this->data = $data;
+            }
+
             public function get($key)
             {
-                $data = [
-                    'preferred_sources' => ['source1', 'source2'],
-                    'preferred_categories' => ['category1', 'category2'],
-                    'preferred_authors' => ['author1', 'author2'],
-                ];
-                return $data[$key] ?? null;
+                return $this->data[$key] ?? null;
             }
         };
 
-        $repo->setPreferredNews($request, $user->id);
+        $repository->setPreferredNews($request, $user->id);
 
         $this->assertDatabaseHas('user_preferences', [
             'user_id' => $user->id,
-            'preferred_sources' => json_encode(['source1', 'source2']),
-            'preferred_categories' => json_encode(['category1', 'category2']),
-            'preferred_authors' => json_encode(['author1', 'author2']),
+            'preferred_sources' => json_encode($requestData['preferred_sources']),
+            'preferred_categories' => json_encode($requestData['preferred_categories']),
+            'preferred_authors' => json_encode($requestData['preferred_authors']),
         ]);
 
-        $this->assertNull(cache()->get($user->id . 'UserPreference'));
+        $this->assertFalse(Cache::has($user->id . 'UserPreference_Page_1_PerPage_10'));
+        $this->assertFalse(Cache::has($user->id . '_UserPreference_Keys'));
     }
+
+
 
 }

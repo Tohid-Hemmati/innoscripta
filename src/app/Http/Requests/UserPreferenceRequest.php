@@ -22,11 +22,11 @@ class UserPreferenceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'preferred_sources' => 'required|array',
+            'preferred_sources' => 'array',
             'preferred_sources.*' => 'string',
-            'preferred_categories' => 'required|array',
+            'preferred_categories' => 'array',
             'preferred_categories.*' => 'string',
-            'preferred_authors' => 'required|array',
+            'preferred_authors' => 'array',
             'preferred_authors.*' => 'string',
         ];
     }

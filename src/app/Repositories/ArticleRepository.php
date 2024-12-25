@@ -92,6 +92,7 @@ class ArticleRepository implements ArticleRepositoryInterface
         }
 
         Cache::forget($keyListKey);
+        Cache::forget($userID. 'UserPreference');
 
         return UserPreference::updateOrCreate(
             ['user_id' => $userID],
@@ -105,14 +106,14 @@ class ArticleRepository implements ArticleRepositoryInterface
 
     public function fetchNewsFeed($request, $userID)
     {
-        $preference = $this->getPreferredNews($userID);
+        $preferences = $this->getPreferredNews($userID);
         $page = $request->input('page', 1);
         $perPage = $request->input('per_page', 10);
         $cacheKey = $userID . 'UserPreference_Page_' . $page . '_PerPage_' . $perPage;
 
         $keyListKey = $userID . '_UserPreference_Keys';
 
-        return Cache::remember($cacheKey, now()->addHours(6), function () use ($preference, $perPage, $keyListKey, $cacheKey) {
+        return Cache::remember($cacheKey, now()->addHours(6), function () use ($preferences, $perPage, $keyListKey, $cacheKey) {
             $cachedKeys = Cache::get($keyListKey, []);
             if (!in_array($cacheKey, $cachedKeys)) {
                 $cachedKeys[] = $cacheKey;
@@ -121,19 +122,37 @@ class ArticleRepository implements ArticleRepositoryInterface
 
             $query = Article::query();
 
-            if (!empty($preference['preferred_sources'])) {
-                $query->whereJsonContains('preferred_sources', $preference['preferred_sources']);
+            if (!empty($preferences['preferred_sources'])) {
+                $query->where(function ($subQuery) use ($preferences) {
+                    foreach ($preferences['preferred_sources'] as $source) {
+                        $subQuery->orWhereRaw(
+                            "MATCH(content) AGAINST(? IN NATURAL LANGUAGE MODE)",
+                            [$source]
+                        );
+                    }
+                });
             }
 
-            if (!empty($preference['preferred_categories'])) {
-                $query->whereJsonContains('preferred_categories', $preference['preferred_categories']);
+            if (!empty($preferences['preferred_categories'])) {
+                $query->where(function ($subQuery) use ($preferences) {
+                    foreach ($preferences['preferred_categories'] as $category) {
+                        $subQuery->orWhereRaw(
+                            "MATCH(content) AGAINST(? IN NATURAL LANGUAGE MODE)",
+                            [$category]
+                        );
+                    }
+                });
             }
 
-            if (!empty($preference['preferred_authors'])) {
-                $query->whereJsonContains('preferred_authors', $preference['preferred_authors']);
+            if (!empty($preferences['preferred_authors'])) {
+                $query->where(function ($subQuery) use ($preferences) {
+                    foreach ($preferences['preferred_authors'] as $author) {
+                        $subQuery->orWhere('author', 'LIKE', "%{$author}%");
+                    }
+                });
             }
 
-            return $query->select(['id', 'title', 'author', 'category'])
+            return $query->select(['id', 'title', 'author', 'content'])
                 ->paginate($perPage);
         });
     }
